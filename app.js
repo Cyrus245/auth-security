@@ -5,7 +5,8 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 mongoose.connect("mongodb://localhost:27017/subscriberDB");
 const User = require('./models/users');
-const md5 = require('md5');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 
 
@@ -40,25 +41,55 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
 
+    bcrypt.hash(req.body.password, saltRounds)
+        .then(hash => {
 
-    const newUser = new User({
+            const newUser = new User({
 
-        email: req.body.username,
-        password: md5(req.body.password)
-
-
+                email: req.body.username,
+                password: hash
 
 
-    })
 
-    newUser.save().then(result => {
 
-        res.render('secrets')
+            })
 
-    }).catch(err => {
+            newUser.save().then(result => {
 
-        console.log(err)
-    });
+                res.render('secrets')
+
+            }).catch(err => {
+
+                console.log(err)
+            });
+
+
+
+        })
+
+
+    // bcrypt.hash(req.body.password, saltRounds, function (err, hash) {
+    //     const newUser = new User({
+
+    //         email: req.body.username,
+    //         password: hash
+
+
+
+
+    //     })
+
+    //     newUser.save().then(result => {
+
+    //         res.render('secrets')
+
+    //     }).catch(err => {
+
+    //         console.log(err)
+    //     });
+
+    // });
+
 
 
 
@@ -69,20 +100,29 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
 
     const userName = req.body.username;
-    const password = md5(req.body.password);
+    const password = req.body.password;
 
     User.findOne({
             email: userName
         })
         .then(foundUser => {
 
-            if (foundUser.password === password) {
 
-                res.render('secrets')
-            } else {
+            bcrypt.compare(password, foundUser.password).then(result => {
 
-                res.send(`unauthorised`)
-            }
+                if (result == true) {
+
+                    res.render('secrets');
+
+                } else {
+
+                    res.send(`unauthorised`)
+                }
+
+
+            })
+
+
 
 
         })
@@ -92,6 +132,13 @@ app.post('/login', (req, res) => {
         })
 
 
+})
+
+
+app.get('/logout', (req, res) => {
+
+
+    res.render('home')
 })
 
 
