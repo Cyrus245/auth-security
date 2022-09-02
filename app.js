@@ -8,6 +8,9 @@ const session = require('express-session');
 const passport = require('passport');
 const passportLocalMongoose = require('passport-local-mongoose');
 const e = require('express');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook');
+const findOrCreate = require('mongoose-findorcreate')
 
 
 app.set('view engine', 'ejs')
@@ -38,6 +41,35 @@ app.get('/', (req, res) => {
     res.render('home')
 
 })
+
+app.get('/auth/google',
+    passport.authenticate('google', {
+        scope: ['profile']
+    }));
+
+
+app.get('/auth/google/secrets',
+    passport.authenticate('google', {
+        failureRedirect: '/login'
+    }),
+    function (req, res) {
+        // Successful authentication, redirect to secrets.
+        res.redirect('/secrets');
+    });
+
+
+app.get('/auth/facebook',
+    passport.authenticate('facebook'));
+
+app.get('/auth/facebook/secrets',
+    passport.authenticate('facebook', {
+        failureRedirect: '/login'
+    }),
+    function (req, res) {
+        // Successful authentication, redirect secrets.
+        res.redirect('/secrets');
+    });
+
 
 app.get('/login', (req, res) => {
 
