@@ -1,6 +1,5 @@
 require('dotenv').config()
 const express = require('express');
-const app = express();
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const User = require('./models/users');
@@ -10,7 +9,10 @@ const passportLocalMongoose = require('passport-local-mongoose');
 const e = require('express');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook');
-const findOrCreate = require('mongoose-findorcreate')
+const findOrCreate = require('mongoose-findorcreate');
+
+const app = express();
+
 
 
 app.set('view engine', 'ejs')
@@ -85,13 +87,21 @@ app.get('/register', (req, res) => {
 
 app.get('/secrets', (req, res) => {
 
-    if (req.isAuthenticated()) {
-
-        res.render('secrets')
-    } else {
-
-        res.redirect('/login')
-    }
+    User.find({
+        secret: {
+            $ne: null
+        }
+    }, function (err, foundUsers) {
+        if (err) {
+            console.log(err);
+        } else {
+            if (foundUsers) {
+                res.render("secrets", {
+                    usersWithSecrets: foundUsers
+                });
+            }
+        }
+    });
 })
 
 
@@ -106,6 +116,61 @@ app.get('/logout', function (req, res) {
 
 })
 
+
+app.get('/submit', (req, res) => {
+    if (req.isAuthenticated()) {
+        res.render("submit");
+    } else {
+        res.redirect("/login");
+    }
+
+
+
+})
+
+
+app.post('/submit', (req, res) => {
+
+    const submittedSecret = req.body.secret;
+
+    //console.log(req.user);
+
+    // User.findById(req.user.id, (err, foundUser) => {
+
+    //     if (err) {
+
+    //         console.log(err)
+    //     } else {
+
+    //         if (foundUser) {
+
+    //             foundUser.secret = submittedSecret;
+    //             foundUser.save(() => {
+
+    //                 res.redirect('/secrets')
+    //             })
+    //         }
+
+    //     }
+    // })
+
+    User.findById(req.user.id).then(foundUser => {
+
+            foundUser.secret = submittedSecret;
+            foundUser.save(() => {
+
+                res.redirect('/secrets')
+            })
+
+        })
+        .catch(err => {
+
+            console.log(err)
+        })
+
+
+
+})
 
 
 

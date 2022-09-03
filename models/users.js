@@ -6,13 +6,15 @@ const FacebookStrategy = require('passport-facebook');
 const findOrCreate = require('mongoose-findorcreate')
 
 
+
 const userSchema = new mongoose.Schema({
 
 
     email: String,
     password: String,
     googleId: String,
-    facebookId: String
+    facebookId: String,
+    secret: String
 
 
 
